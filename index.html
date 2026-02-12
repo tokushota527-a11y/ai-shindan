@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>おすすめAI診断</title>
+  <title>1分でわかる｜AI活用タイプ診断</title>
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;background:#0b0f17;color:#e9eef7;margin:0}
     .wrap{max-width:560px;margin:0 auto;padding:20px}
@@ -25,7 +25,6 @@
     .small{font-size:12px;color:rgba(233,238,247,.75);margin-top:10px;line-height:1.6}
     .resultTitle{font-size:18px;margin:0 0 8px}
     .resultType{font-size:16px;margin:0 0 10px;color:#9fc2ff}
-    .pill{display:inline-block;margin-top:6px;font-size:12px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.08)}
   </style>
 </head>
 <body>
@@ -33,22 +32,26 @@
     <div class="card fade" id="card">
       <div class="top">
         <div class="badge" id="stepBadge">Q1/5</div>
-        <h1>あなたの隠れた性格でわかる！おすすめAI診断</h1>
+        <h1>1分でわかる｜AI活用タイプ診断</h1>
       </div>
+
       <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+
       <div class="q" id="question"></div>
       <div class="btns" id="choices"></div>
+
       <div class="row">
         <button class="ghost" id="backBtn" type="button">戻る</button>
         <button class="ghost" id="resetBtn" type="button">最初から</button>
       </div>
-      <div class="small">※占いじゃなくて実務ベース。刺さったらそれが正解。</div>
+
+      <div class="small">※占いではなく、実務での“つまずきポイント”から判定します（所要1分）。</div>
     </div>
   </div>
 
 <script>
   // ===== 設定 =====
-  const LINE_URL = "https://lin.ee/6jmZmPJ"; // 
+  const LINE_URL = "https://lin.ee/6jmZmPJ"; // あなたのLINE
 
   const questions = [
     {
@@ -91,7 +94,7 @@
       text: "AIを使う目的として一番近いのは？",
       choices: [
         { label: "A. 目的自体がまだない", score: { A:1 } },
-        { label: "B. 楽できそうだから", score: { B:1 } },
+        { label: "B. 時短できそうだから", score: { B:1 } },
         { label: "C. 仕事に使えたらいいなと思っている", score: { C:1 } },
         { label: "D. 効率や精度をもっと上げたい", score: { D:1 } },
       ]
@@ -170,7 +173,7 @@ AIは万能ではないので、
     }
   };
 
-  // tie時は前段階優先: D > C > B > A ではなく、前段階（初心者側）優先なので A→B→C→D
+  // tie時は初心者側優先: A→B→C→D
   const tiePriority = ["A","B","C","D"];
 
   // ===== ロジック =====
@@ -195,17 +198,19 @@ AIは万能ではないので、
     setFade();
 
     // progress
-    elBadge.textContent = `Q${Math.min(idx+1, questions.length)}/${questions.length}`;
-    elBar.style.width = `${Math.min((idx)/questions.length*100, 100)}%`;
+    const total = questions.length;
+    elBadge.textContent = idx < total ? `Q${idx+1}/${total}` : "結果";
+    elBar.style.width = `${Math.min((idx / total) * 100, 100)}%`;
 
     backBtn.disabled = idx === 0;
     backBtn.style.opacity = idx === 0 ? .5 : 1;
 
-    if (idx < questions.length) {
+    if (idx < total) {
       const q = questions[idx];
       elQ.textContent = q.text;
       elC.innerHTML = "";
-      q.choices.forEach((choice, cIndex) => {
+
+      q.choices.forEach((choice) => {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.textContent = choice.label;
@@ -221,23 +226,23 @@ AIは万能ではないので、
       // result
       const counts = {A:0,B:0,C:0,D:0};
       answers.forEach(a => counts[a]++);
-      // max
+
       const max = Math.max(counts.A,counts.B,counts.C,counts.D);
       const tied = Object.keys(counts).filter(k => counts[k] === max);
-      // tie -> beginner優先
+
       tied.sort((x,y)=> tiePriority.indexOf(x)-tiePriority.indexOf(y));
       const win = tied[0];
       const res = resultMap[win];
 
-      elBadge.textContent = "結果";
       elBar.style.width = "100%";
 
       elQ.innerHTML = `
         <p class="resultTitle">あなたの結果</p>
-        <p class="resultType">【${res.type}】 <span class="pill">A:${counts.A} B:${counts.B} C:${counts.C} D:${counts.D}</span></p>
+        <p class="resultType">【${res.type}】</p>
       `;
 
       elC.innerHTML = "";
+
       const pre = document.createElement("div");
       pre.style.whiteSpace = "pre-wrap";
       pre.style.lineHeight = "1.65";
@@ -247,7 +252,7 @@ AIは万能ではないので、
       const a = document.createElement("a");
       a.href = LINE_URL;
       a.className = "cta";
-      a.textContent = "このタイプの人が最初にやるべき1手を聞く";
+      a.textContent = "最初の1手をもらう";
       a.target = "_blank";
       elC.appendChild(a);
     }
